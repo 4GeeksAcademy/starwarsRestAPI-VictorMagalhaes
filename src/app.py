@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, People, Planets
 #from models import Person
 
 app = Flask(__name__)
@@ -36,14 +36,104 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
-def handle_hello():
+@app.route('/users', methods=['GET'])
+def get_all_users():
+     
+     all_users = User.query.all()
+     all_users = list(map(lambda x: x.serialize(), all_users))
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+     print(all_users)
 
-    return jsonify(response_body), 200
+     return jsonify(all_users), 200
+
+@app.route('/create-user', methods=['POST'])
+def create_user():
+
+    data = request.get_json()
+
+    if data is None:
+            response_body = {
+                "msg": "BODY should be passed with request"
+            }
+            return jsonify(response_body), 400
+    if "email" not in data:
+            response_body = {
+                 "msg": "Email should be passed with request"
+            }
+            return jsonify(response_body), 400
+    if "password" not in data:
+            response_body = {
+                 "msg": "Password should be passed with request"
+            }
+            return jsonify(response_body), 400
+    
+    new_user = User(email = data["email"], password = data["password"], is_active = True)
+    db.session.add(new_user)
+    db.session.commit()
+
+    all_users = User.query.all()
+    all_users = list(map(lambda x: x.serialize(), all_users)) 
+
+    print(all_users)
+
+    return jsonify(all_users, 200)  
+
+@app.route('/user/<int:user_id>', methods=['GET'])
+def get_single_user(user_id):
+    
+    user = User.query.get(user_id)
+    user = user.serialize()
+
+    print(user)
+
+    return jsonify(user), 200
+
+@app.route('/user/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+     
+    data = request.get_json()
+
+    if data is None:
+            response_body = {
+                "msg": "BODY should be passed with request"
+            }
+            return jsonify(response_body), 400
+    if "email" not in data:
+            response_body = {
+                 "msg": "Email should be passed with request"
+            }
+            return jsonify(response_body), 400
+    if "password" not in data:
+            response_body = {
+                 "msg": "Password should be passed with request"
+            }
+            return jsonify(response_body), 400
+    
+    update_user = User.query.get(user_id)
+    update_user.email = data["email"]
+    update_user.password = data["password"]
+    db.session.commit()
+
+    user = User.query.get(user_id)
+    user = user.serialize()
+
+    print(user)
+
+    return jsonify(user), 200
+
+@app.route('/user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+      
+      user =  User.query.get(user_id)
+      db.session.delete(user)
+      db.session.commit()
+
+      response_body = {
+            "msg": "User Deleted Successfully!"
+      }
+
+      return jsonify(response_body)
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
