@@ -134,6 +134,62 @@ def delete_user(user_id):
 
       return jsonify(response_body)
 
+@app.route('/people', methods=['GET'])
+def get_all_people():
+     
+     all_people = People.query.all()
+     all_people = list(map(lambda x: x.serialize(), all_people))
+
+     print(all_people)
+
+     return jsonify(all_people), 200
+
+@app.route('/create-people', methods=['POST'])
+def create_people():
+
+    data = request.get_json()
+
+    if data is None:
+            response_body_people = {
+                "msg": "BODY should be passed with request"
+            }
+            return jsonify(response_body_people), 400
+    
+    
+    new_people = People(name=data["name"], gender=data["gender"])
+    db.session.add(new_people)
+    db.session.commit()
+
+    all_people = People.query.all()
+    all_people = list(map(lambda x: x.serialize(), all_people)) 
+
+    print(all_people)
+
+    return jsonify(all_people, 200)  
+
+@app.route('/people/<int:people_id>', methods=['GET'])
+def get_single_people(people_id):
+
+    people = People.query.get(people_id)
+
+    return jsonify(people.serialize()), 200
+
+@app.route('/planets', methods=['GET'])
+def get_all_planets():
+     
+     all_planets = Planets.query.all()
+     all_planets = list(map(lambda x: x.serialize(), all_planets))
+
+     print(all_planets)
+
+     return jsonify(all_planets), 200
+
+@app.route('/planets/<int:planet_id>', methods=['GET'])
+def get_single_planet(planet_id):
+
+    planet = Planets.query.get(planet_id)
+
+    return jsonify(planet.serialize()), 200
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
